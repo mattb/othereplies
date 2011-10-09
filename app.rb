@@ -45,13 +45,7 @@ class OtherApp < Sinatra::Base
   get '/graph_data/:token' do
     data = Redis.new.hgetall("or:user:#{params[:token]}:graph")
     nodes = data.keys.map { |k| k.split(/:/) }.flatten.uniq
-    # nodes = ["you"] + nodes
     edges = data.to_a.map { |k,v| k.split(/:/) + [v] }.map { |source,target,value| [nodes.index(source), nodes.index(target), value.to_i] }
-    #nodes.each_with_index { |n,i|
-      #if i > 0
-        #edges << [0,i,1]
-      #end
-    #} 
     content_type :json
     { "nodes" => nodes.map { |k| { "name" => k, "group" => 1} },
       "links" => edges.map { |source,target,value| { "source" => source, "target" => target, "value" => value } }
