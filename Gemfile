@@ -10,6 +10,7 @@ gem 'redis-objects', :require => 'redis/objects'
 gem 'redis-namespace'
 gem 'hashie'
 gem 'yajl-ruby'
+gem 'foreman'
 
 # oddball em-http-request head and fork of oauth required as of 2011-07-20
 # until https://github.com/oauth/oauth-ruby/issues/28 is closed
