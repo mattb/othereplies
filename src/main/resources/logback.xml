@@ -1,6 +1,6 @@
 <configuration>
   <appender name="rolling" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <File>replies.log</File>
+    <File>log/replies.log</File>
     <encoder>
       <pattern>%d{ISO8601} [%t] %c %-5p %m%n</pattern>
     </encoder>

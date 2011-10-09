@@ -48,6 +48,7 @@ end
 
 after "deploy:update", "foreman:export"
 after "deploy:update", "foreman:restart"
+before "foreman:export", "monitor:jar"
 
 namespace :monitor do
   task :jar, :roles => :app do
@@ -57,4 +58,3 @@ namespace :monitor do
     end
   end
 end
-
