@@ -25,3 +25,5 @@ scalaVersion := "2.9.1"
 scalacOptions ++= Seq("-unchecked", "-deprecation")
 
 seq(com.github.retronym.SbtOneJar.oneJarSettings: _*)
+
+seq(com.typesafe.sbtscalariform.ScalariformPlugin.settings: _*)

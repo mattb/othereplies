@@ -19,11 +19,11 @@ import akka.routing._
 import akka.config._
 import akka.config.Supervision._
 
-case class Poll() 
-case class Start() 
-case class InterestedInUsers(users : List[String])
-case class Response(params : Map[String,String], response : com.ning.http.client.Response) 
-case class Tweet(tweet : JsonNode) 
+case class Poll()
+case class Start()
+case class InterestedInUsers(users: List[String])
+case class Response(params: Map[String, String], response: com.ning.http.client.Response)
+case class Tweet(tweet: JsonNode)
 
 object Monitor extends App {
   val jedispool = new JedisPool(new JedisPoolConfig(), "localhost")
@@ -34,8 +34,7 @@ object Monitor extends App {
     SupervisorConfig(
       OneForOneStrategy(List(classOf[Exception]), 3, 10),
       Supervise(monitor, Permanent) ::
-      Nil)
-    )
+        Nil))
 
   factory.newInstance.start
   monitor ! Start
@@ -45,7 +44,7 @@ object Monitor extends App {
 class Monitor extends Actor {
   def receive = {
     case Start => {
-      for((token,n) <- User.unwrapped_redis(_.smembers("or:users")) zipWithIndex) {
+      for ((token, n) <- User.unwrapped_redis(_.smembers("or:users")) zipWithIndex) {
         val actor = Actor.actorOf(new User(self, token)).start
         self.link(actor)
         Scheduler.schedule(actor, Poll, n % 12, 12, SECONDS)
@@ -53,17 +52,16 @@ class Monitor extends Actor {
       become(ready(Map.empty))
     }
   }
-  def ready(registry : Map[String, Set[UntypedChannel]]) : Receive = {
+  def ready(registry: Map[String, Set[UntypedChannel]]): Receive = {
     case InterestedInUsers(users) => {
-      val newRegistry = registry ++ users.map(id => 
-        (id -> (registry.getOrElse(id, Set.empty) + self.channel))
-      )
+      val newRegistry = registry ++ users.map(id =>
+        (id -> (registry.getOrElse(id, Set.empty) + self.channel)))
       become(ready(newRegistry))
     }
     case Tweet(tweet) => {
-      if(!(tweet path "in_reply_to_user_id" isNull)) {
+      if (!(tweet path "in_reply_to_user_id" isNull)) {
         val user_id = tweet.path("user").path("id_str").getTextValue
-        for(user <- registry.getOrElse(user_id, Set.empty)) user ! Tweet(tweet)
+        for (user <- registry.getOrElse(user_id, Set.empty)) user ! Tweet(tweet)
       }
     }
   }
