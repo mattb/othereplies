@@ -144,10 +144,11 @@ class User(monitor: ActorRef, token: String) extends Actor with Instrumented {
         val json = generate(templateData)
         EventHandler.info(this, "From @%s for @%s: %s".format(templateData("screenName"), screen_name, templateData("tweetText")))
         redis { r =>
+          r.hincrBy("graph", "%s:%s".format(templateData("screenName"), t path "in_reply_to_screen_name" getTextValue), 1)
           r.zadd("timeline", (time.parseDateTime(t path "created_at" getTextValue).millis / 1000), json)
           r.zremrangeByRank("timeline", 0, -50)
         }
-        User.unwrapped_redis(_.publish("juggernaut", generate(Map("channels" -> List("/tweets/" + token), "data" -> json))))
+        monitor ! Juggernaut(token, json)
       }
     }
     redis(_.sadd("seen", t path "id_str" getTextValue))

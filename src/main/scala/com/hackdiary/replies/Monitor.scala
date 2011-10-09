@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit._
 import com.ning.http.client._
 import org.codehaus.jackson.map._
 import org.codehaus.jackson._
+import com.codahale.jerkson.Json._
 
 import com.yammer.metrics.Instrumented
 import java.util.concurrent.TimeUnit
@@ -24,6 +25,7 @@ case class Start()
 case class InterestedInUsers(users: List[String])
 case class Response(params: Map[String, String], response: com.ning.http.client.Response)
 case class Tweet(tweet: JsonNode)
+case class Juggernaut(channel: String, data: String)
 
 object Monitor extends App {
   val jedispool = new JedisPool(new JedisPoolConfig(), "localhost")
@@ -64,5 +66,6 @@ class Monitor extends Actor {
         for (user <- registry.getOrElse(user_id, Set.empty)) user ! Tweet(tweet)
       }
     }
+    case Juggernaut(channel, data) => User.unwrapped_redis(_.publish("juggernaut", generate(Map("channels" -> List("/tweets/" + channel), "data" -> data))))
   }
 }

@@ -11,3 +11,4 @@ tags
 src/main/scala/com/hackdiary/replies/TwitterConfig.scala
 *.log
 .rvmrc
+replies.log*
