@@ -1,1 +1,1 @@
-twitter: java -server -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=1234 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -jar othereplies_2.9.1-0.1-one-jar.jar
+monitor: java -server -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=1234 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -jar /var/www/replies.hackdiary.com/shared/system/othereplies_2.9.1-0.1-one-jar.jar

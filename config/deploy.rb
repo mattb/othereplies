@@ -3,6 +3,7 @@ require 'bundler/capistrano'
 set :application, "othereplies"
 set :repository,  "git@github.com:mattb/othereplies.git"
 set :deploy_to, "/var/www/replies.hackdiary.com"
+set :user, "mattb"
 
 set :scm, :git
 set :deploy_via, :remote_cache
@@ -47,3 +48,13 @@ end
 
 after "deploy:update", "foreman:export"
 after "deploy:update", "foreman:restart"
+
+namespace :monitor do
+  task :jar, :roles => :app do
+    servers = find_servers :roles => :app
+    servers.each do |server|
+      `sbt one-jar && rsync -z target/scala-2.9.1/othereplies_2.9.1-0.1-one-jar.jar #{user}@#{server}:#{shared_path}/system/`
+    end
+  end
+end
+
