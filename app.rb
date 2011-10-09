@@ -45,7 +45,25 @@ class OtherApp < Sinatra::Base
   get '/graph_data/:token' do
     data = Redis.new.hgetall("or:user:#{params[:token]}:graph")
     nodes = data.keys.map { |k| k.split(/:/) }.flatten.uniq
-    edges = data.to_a.map { |k,v| k.split(/:/) + [v] }.map { |source,target,value| [nodes.index(source), nodes.index(target), value.to_i] }
+    edges = data.to_a.map { |k,v| k.split(/:/) + [v] }
+
+    # remove any subgraphs of size 2 that clutter up the viz
+    blacklist = nodes.select { |user|
+      links = data.keys.select { |k| k.match(/^#{user}:/) or k.match(/:#{user}$/) }
+      if links.size == 1
+        other = links[0].split(/:/).select { |n| n != user }[0]
+        other_links = data.keys.select { |k| k.match(/^#{other}:/) or k.match(/:#{other}$/) }
+        if other_links.size == 1
+          true
+        else
+          false
+        end
+      else
+        false
+      end
+    }
+    nodes -= blacklist
+    edges = edges.select { |source,target,value| !blacklist.include?(source) and !blacklist.include?(target) }.map { |source,target,value| [nodes.index(source), nodes.index(target), value.to_i] }
     content_type :json
     { "nodes" => nodes.map { |k| { "name" => k, "group" => 1} },
       "links" => edges.map { |source,target,value| { "source" => source, "target" => target, "value" => value } }
