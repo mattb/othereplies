@@ -5,7 +5,7 @@ require 'bundler/setup'
 Bundler.require
 
 require 'user'
-require 'twitter-config'
+require 'lib/twitter-config'
 require 'uri'
 
 class OtherApp < Sinatra::Base
