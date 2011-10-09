@@ -17,6 +17,7 @@ import redis.clients.jedis._
 
 import akka.actor._
 import akka.event._
+import akka.dispatch._
 
 import Actor._
 
@@ -90,7 +91,14 @@ class User(monitor : ActorRef, token : String) extends Actor with Instrumented {
     case Response(params, response) => handleResponse(params, response)
   }
 
-  def poll = if(following.size > 0) httpasync("http://api.twitter.com/1/statuses/user_timeline.json",nextParams)
+  def poll = if(following.size > 0) {
+    val params = nextParams
+    httpasync("http://api.twitter.com/1/statuses/user_timeline.json",params) onResult { 
+      case response : com.ning.http.client.Response => self ! Response(params, response)
+    } recover { 
+      case e : Throwable => EventHandler.error(e,this,"Exception in HTTP request future.")
+    }
+  }
     
   def handleResponse(params : Map[String,String], response : com.ning.http.client.Response) {
     response.getStatusCode match {
@@ -150,15 +158,17 @@ class User(monitor : ActorRef, token : String) extends Actor with Instrumented {
     val builder = User.asyncHttpClient.prepareGet(url).setSignatureCalculator(calculator)
     for((k,v) <- params) builder.addQueryParameter(k,v)
     val ahcFuture = User.asyncHttpClient.executeRequest(builder.build)
+    val f = new DefaultCompletableFuture[com.ning.http.client.Response]
     ahcFuture.addListener(new Runnable { 
       def run = {
         try {
-          self ! Response(params, ahcFuture.get) 
+          f.completeWithResult(ahcFuture.get)
         } catch {
-          case e : Exception => EventHandler.error(e,ahcFuture,"Exception in HTTP request future.")
+          case e : Exception => f.completeWithException(e)
         }
       }
     }, new Executor { def execute(r : Runnable) = r.run })
+    f
   }
 
   def nextParams = {
