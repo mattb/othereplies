@@ -26,8 +26,8 @@
 
       d3.json("/graph_data/<%= @token %>", function(json) {
         var force = d3.layout.force()
-        .charge(-135)
-        .linkDistance(60)
+        .charge(-145)
+        .linkDistance(55)
         .nodes(json.nodes)
         .links(json.links)
         .size([w, h])
