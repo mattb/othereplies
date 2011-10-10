@@ -81,7 +81,6 @@ class Monitor extends Actor {
     case ControlMessage(message) => {
       try {
         val control = mapper.readTree(message)
-        EventHandler.info(this, "Control message: %s".format(control))
         control path "command" getTextValue match {
           case "checkin" => EventHandler.info(this, "User %s checked in.".format(control path "token" getTextValue))
           case "setup" => {

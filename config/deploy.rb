@@ -43,7 +43,7 @@ namespace :foreman do
 
   desc "Restart the application services"
   task :restart, :roles => :app do
-    run "sudo start #{application} || sudo restart #{application}"
+    run "sudo stop #{application} ; sudo start #{application}"
   end
 end
 
