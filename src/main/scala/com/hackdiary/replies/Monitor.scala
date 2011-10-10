@@ -26,7 +26,7 @@ case class Start()
 case class InterestedInUsers(users: List[String])
 case class Response(params: Map[String, String], response: com.ning.http.client.Response)
 case class Tweet(tweet: JsonNode)
-case class Juggernaut(channel: String, data: String)
+case class Publish(channel: String, data: String)
 case class ControlMessage(message: String)
 case class NewUser(token: String)
 
@@ -63,12 +63,14 @@ object Monitor extends App {
 
 class Monitor extends Actor {
   val mapper = new ObjectMapper
+
   def receive = {
     case Start => {
       for (token <- User.unwrapped_redis(_.smembers("or:users"))) self ! NewUser(token)
       become(ready(Map.empty, Set.empty))
     }
   }
+
   def ready(registry: Map[String, Set[UntypedChannel]], tokens: Set[String]): Receive = {
     case NewUser(token) => {
       if (!tokens.contains(token)) {
@@ -78,22 +80,7 @@ class Monitor extends Actor {
         become(ready(registry, tokens + token))
       }
     }
-    case ControlMessage(message) => {
-      try {
-        val control = mapper.readTree(message)
-        control path "command" getTextValue match {
-          case "checkin" => EventHandler.info(this, "User %s checked in.".format(control path "token" getTextValue))
-          case "setup" => {
-            val token = control.path("token").getTextValue
-            EventHandler.info(this, "New user %s.".format(token))
-            self ! NewUser(token)
-          }
-          case other => EventHandler.warning(this, "Unhandled command: %s".format(control))
-        }
-      } catch {
-        case e: Exception => EventHandler.warning(this, "Control message not parseable: %s".format(message))
-      }
-    }
+    case ControlMessage(message) => control(message)
     case InterestedInUsers(users) => {
       val newRegistry = registry ++ users.map { id =>
         (id -> (registry.getOrElse(id, Set.empty) + self.channel))
@@ -106,6 +93,23 @@ class Monitor extends Actor {
         for (user <- registry.getOrElse(user_id, Set.empty)) user ! Tweet(tweet)
       }
     }
-    case Juggernaut(channel, data) => User.unwrapped_redis(_.publish("juggernaut", generate(Map("channels" -> List("/tweets/" + channel), "data" -> data))))
+    case Publish(channel, data) => User.unwrapped_redis(_.publish("juggernaut", generate(Map("channels" -> List("/tweets/" + channel), "data" -> data))))
+  }
+
+  def control(message: String) = {
+    try {
+      val control = mapper.readTree(message)
+      control path "command" getTextValue match {
+        case "checkin" => EventHandler.info(this, "User %s checked in.".format(control path "token" getTextValue))
+        case "setup" => {
+          val token = control.path("token").getTextValue
+          EventHandler.info(this, "New user %s.".format(token))
+          self ! NewUser(token)
+        }
+        case other => EventHandler.warning(this, "Unhandled command: %s".format(control))
+      }
+    } catch {
+      case e: Exception => EventHandler.warning(this, "Control message not parseable: %s".format(message))
+    }
   }
 }

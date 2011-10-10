@@ -147,7 +147,7 @@ class User(monitor: ActorRef, token: String) extends Actor with Instrumented {
           r.zadd("timeline", (time.parseDateTime(t path "created_at" getTextValue).millis / 1000), json)
           r.zremrangeByRank("timeline", 0, -50)
         }
-        monitor ! Juggernaut(token, json)
+        monitor ! Publish(token, json)
       }
     }
     redis { r =>
