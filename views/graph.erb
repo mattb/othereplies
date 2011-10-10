@@ -7,7 +7,7 @@
     <script src='http://mbostock.github.com/d3/d3.geom.js?2.3.2' type='text/javascript'> </script>
     <style type="text/css">
       .link { stroke: #ccc; }
-      .nodetext { pointer-events: none; font: 12px sans-serif; }
+      .nodetext { pointer-events: none; font: <%= params[:font] || 12 %>px sans-serif; }
     </style>
   </head>
   <body>
@@ -26,8 +26,8 @@
 
       d3.json("/graph_data/<%= @token %>", function(json) {
         var force = d3.layout.force()
-        .charge(-145)
-        .linkDistance(55)
+        .charge(<%= params[:charge] || -145 %>)
+        .linkDistance(<%= params[:distance] || 55 %>)
         .nodes(json.nodes)
         .links(json.links)
         .size([w, h])

@@ -63,7 +63,9 @@ class OtherApp < Sinatra::Base
       end
     }
     nodes -= blacklist
-    edges = edges.select { |source,target,value| !blacklist.include?(source) and !blacklist.include?(target) }.map { |source,target,value| [nodes.index(source), nodes.index(target), value.to_i] }
+    edges = edges.select { |source,target,value| !blacklist.include?(source) and !blacklist.include?(target) }
+
+    edges = edges.map { |source,target,value| [nodes.index(source), nodes.index(target), value.to_i] }
     content_type :json
     { "nodes" => nodes.map { |k| { "name" => k, "group" => 1} },
       "links" => edges.map { |source,target,value| { "source" => source, "target" => target, "value" => value } }
