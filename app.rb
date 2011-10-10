@@ -42,6 +42,19 @@ class OtherApp < Sinatra::Base
     erb :graph
   end
 
+  get '/gdf/:token' do
+    data = Redis.new.hgetall("or:user:#{params[:token]}:graph")
+    nodes = data.keys.map { |k| k.split(/:/) }.flatten.uniq
+    edges = data.to_a.map { |k,v| k.split(/:/) + [v.to_i] }
+    gdf = ["nodedef>name VARCHAR,label VARCHAR"]
+    gdf += nodes.map { |k| "\"#{k}\",\"#{k}\"" }
+    gdf += ["edgedef>node1 VARCHAR,node2 VARCHAR, weight INT"]
+    gdf += edges.map { |n1,n2,w| "\"#{n1}\",\"#{n2}\",#{w}" }
+
+    content_type 'text/plain'
+    gdf.join("\n")
+  end
+
   get '/graph_data/:token' do
     data = Redis.new.hgetall("or:user:#{params[:token]}:graph")
     nodes = data.keys.map { |k| k.split(/:/) }.flatten.uniq
