@@ -64,7 +64,7 @@ object Monitor extends App {
 class Monitor extends Actor {
   def receive = {
     case Start => {
-      for (token <- User.unwrapped_redis(_.smembers("or:commands"))) self ! NewUser(token)
+      for (token <- User.unwrapped_redis(_.smembers("or:users"))) self ! NewUser(token)
       become(ready(Map.empty, Set.empty))
     }
   }
