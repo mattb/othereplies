@@ -53,7 +53,7 @@ object Monitor extends App {
         def onUnsubscribe(string: String, i: Int) = {}
         def onPUnsubscribe(string: String, i: Int) = {}
         def onPSubscribe(string: String, i: Int) = {}
-      }, "or:control")
+      }, "or:commands")
     } finally {
       jedispool.returnResource(jedis)
     }
