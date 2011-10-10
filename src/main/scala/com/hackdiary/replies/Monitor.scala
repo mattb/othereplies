@@ -62,6 +62,7 @@ object Monitor extends App {
 }
 
 class Monitor extends Actor {
+  val mapper = new ObjectMapper
   def receive = {
     case Start => {
       for (token <- User.unwrapped_redis(_.smembers("or:users"))) self ! NewUser(token)
@@ -77,7 +78,23 @@ class Monitor extends Actor {
         become(ready(registry, tokens + token))
       }
     }
-    case ControlMessage(message) => EventHandler.info(this, "Control message: %s".format(message))
+    case ControlMessage(message) => {
+      try {
+        val control = mapper.readTree(message)
+        EventHandler.info(this, "Control message: %s".format(control))
+        control path "command" getTextValue match {
+          case "checkin" => EventHandler.info(this, "User %s checked in.".format(control path "token" getTextValue))
+          case "setup" => {
+            val token = control.path("token").getTextValue
+            EventHandler.info(this, "New user %s.".format(token))
+            self ! NewUser(token)
+          }
+          case other => EventHandler.warning(this, "Unhandled command: %s".format(control))
+        }
+      } catch {
+        case e: Exception => EventHandler.warning(this, "Control message not parseable: %s".format(message))
+      }
+    }
     case InterestedInUsers(users) => {
       val newRegistry = registry ++ users.map { id =>
         (id -> (registry.getOrElse(id, Set.empty) + self.channel))
