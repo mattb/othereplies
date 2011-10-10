@@ -26,7 +26,7 @@ class OtherApp < Sinatra::Base
   end
 
   get '/twitter/:token' do
-    Redis::Objects.redis.publish("or:users", { :token => params[:token], :command => 'checkin' }.to_json)
+    Redis::Objects.redis.publish("commands", { :token => params[:token], :command => 'checkin' }.to_json)
 
     @token = params[:token]
     @juggernaut_port = 8081
@@ -86,7 +86,7 @@ class OtherApp < Sinatra::Base
   end
 
   get '/twitter/:token/refresh' do
-    Redis::Objects.redis.publish("or:users", { :token => params[:token], :command => 'refresh' }.to_json)
+    Redis::Objects.redis.publish("commands", { :token => params[:token], :command => 'refresh' }.to_json)
     return 'OK'
   end
 
@@ -96,7 +96,7 @@ class OtherApp < Sinatra::Base
     if !user.token.exists?
       user = User.add(auth["credentials"]["token"], auth["credentials"]["secret"])
     end
-    Redis::Objects.redis.publish("or:users", { :token => user.token.value, :command => 'setup' }.to_json)
+    Redis::Objects.redis.publish("commands", { :token => user.token.value, :command => 'setup' }.to_json)
 
     redirect '/twitter/' + auth["credentials"]["token"]
   end
