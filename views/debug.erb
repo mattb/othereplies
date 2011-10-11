@@ -3,7 +3,11 @@
     <h1>Users</h1>
     <ul>
       <% for user in @users %>
-      <li><a href="/twitter/<%= user.token %>"><%= user.screen_name %></li>
+        <li>
+        <%= user.screen_name %>: 
+        <a href="/twitter/<%= user.token %>">rolling display</a>
+        <a href="/graph/<%= user.token %>">graph</a>
+        </li>
       <% end %>
     </ul>
   </body>
