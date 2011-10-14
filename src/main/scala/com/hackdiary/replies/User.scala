@@ -130,6 +130,8 @@ class User(monitor: ActorRef, token: String) extends Actor with Instrumented {
           "tweetURL" -> "http://www.twitter.com/%s/statuses/%s".format(t path "user" path "screen_name" getTextValue, t path "id_str" getTextValue),
           "screenName" -> (t path "user" path "screen_name" getTextValue),
           "realName" -> (t path "user" path "name" getTextValue),
+          "user_id" -> (t path "user" path "id_str" getTextValue),
+          "geo" -> (t path "geo" path "coordinates" getElements).mkString(","),
           "tweetText" -> (t path "text" getTextValue),
           "source" -> (t path "source" getTextValue),
           "inReplyTo" -> (t path "in_reply_to_status_id_str" getTextValue),
